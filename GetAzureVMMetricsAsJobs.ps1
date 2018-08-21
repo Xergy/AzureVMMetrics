@@ -47,13 +47,14 @@ Param(
     Return $MetricsVM
 }
 
+$elapsed = [System.Diagnostics.Stopwatch]::StartNew()
 
 foreach ( $sub in $subs )
 {
     Select-AzureRmSubscription -SubscriptionId $sub.Id 
 
     Write-Verbose "Look for Out-GridView PopUp!"
-    $RGSelection = Get-AzureRmResourceGroup  | Out-GridView -Title "Select Resource Groups for $($sub.Name) $($sub.id)" -OutputMode Multiple
+    $RGSelection = Get-AzureRmResourceGroup -InformationAction SilentlyContinue  | Out-GridView -Title "Select Resource Groups for $($sub.Name) $($sub.id)" -OutputMode Multiple 
 
     ForEach ($RG in $RGSelection) {
         Write-Verbose "Starting jobs for $($RG.ResourceGroupName) in $($sub.Name) $($sub.id)"
@@ -103,3 +104,6 @@ $VMs | Select-Object -Property $OutputFileProps | Export-Csv -Path "C:\temp\$($N
 
 $VMs | Select-Object -Property $OutputFileProps | Out-GridView
 
+Write-Verbose "Summary: Subscription Count=$($Subs.Count) VM Count=$($VMs.Count)"
+Write-Verbose "Total Elapsed Time: $($elapsed.Elapsed.ToString())"
+$elapsed.Stop()
