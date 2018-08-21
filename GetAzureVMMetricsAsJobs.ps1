@@ -1,6 +1,6 @@
 #if not logged in to Azure, start login
 if ($Null -eq (Get-AzureRmContext).Account) {
-    Login-AzureRmAccount -Environment ( (Get-AzureRmEnvironment).Name | Out-GridView -Title "Select AzureRmEnvironment" -OutputMode Single )
+    Connect-AzureRmAccount -Environment ( (Get-AzureRmEnvironment).Name | Out-GridView -Title "Select AzureRmEnvironment" -OutputMode Single )
 }
 
 #Set Verbose
@@ -56,14 +56,14 @@ foreach ( $sub in $subs )
     $RGSelection = Get-AzureRmResourceGroup  | Out-GridView -Title "Select Resource Groups for $($sub.Name) $($sub.id)" -OutputMode Multiple
 
     ForEach ($RG in $RGSelection) {
-        
+        Write-Verbose "Starting jobs for $($RG.ResourceGroupName) in $($sub.Name) $($sub.id)"
         $RGVMs = Get-AzureRmVM -ResourceGroupName $RG.ResourceGroupName
-
+        Write-Verbose "Number of VMs found in this RG: $($RGVMs.Count)"
         ForEach ($VM in $RGVMs) {            
 
             $VM | Add-Member -MemberType NoteProperty -Name Status -Value ((Get-AzureRmVM -ResourceGroupName $VM.ResourceGroupName -Name $VM.Name -Status).Statuses[1]).DisplayStatus -Force  
                         
-            Write-Verbose "Starting Job for VM $($VM.Name)"
+            Write-Verbose "Starting job for VM $($VM.Name)"
             Start-Job -Name $vm.Name -ScriptBlock $Scriptblock -ArgumentList $VM | Out-Null
 
         }
@@ -71,7 +71,7 @@ foreach ( $sub in $subs )
         Write-Verbose "Waiting for jobs to complete for $($RG.ResourceGroupName) in $($sub.Name) $($sub.id)"
         Get-Job | Wait-Job | Out-Null
         
-        Write-Verbose "Cleaning up jobs for this RG"
+        #Write-Verbose "Cleaning up jobs for this RG"
         Get-Job | 
             ForEach-Object { 
                 $VMs += $_ | Receive-Job -InformationAction SilentlyContinue ; $_ 
