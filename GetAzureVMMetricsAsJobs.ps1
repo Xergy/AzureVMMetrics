@@ -72,7 +72,7 @@ foreach ( $sub in $subs )
         Write-Verbose "Waiting for jobs to complete for $($RG.ResourceGroupName) in $($sub.Name) $($sub.id)"
         Get-Job | Wait-Job | Out-Null
         
-        #Write-Verbose "Cleaning up jobs for this RG"
+        Write-Verbose "Cleaning up jobs for this RG"
         Get-Job | 
             ForEach-Object { 
                 $VMs += $_ | Receive-Job -InformationAction SilentlyContinue ; $_ 
