@@ -1,4 +1,4 @@
-#if not logged in to Azure, start login
+#if not logged in to Azure, start Login
 if ($Null -eq (Get-AzureRmContext).Account) {
     Connect-AzureRmAccount -Environment ( (Get-AzureRmEnvironment).Name | Out-GridView -Title "Select AzureRmEnvironment" -OutputMode Single )
 }
